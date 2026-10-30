@@ -1,39 +1,35 @@
-ESTUDIO DE NARRACAO · A LIGA
-=============================
+ESTÚDIO DE NARRAÇÃO · A LIGA
+============================
 
-COMO ABRIR
-  Duplo clique em ABRIR_ESTUDIO.bat (abre no Chrome ou no Edge).
-  Funciona sem internet. Se o navegador pedir permissao para usar o microfone, clique em "Permitir".
+O QUE É
+Um aplicativo para você narrar as 3 aulas no SEU ritmo. O texto aparece na tela e acompanha a sua voz.
+O aplicativo grava a sua imagem (câmera) e o seu som, trecho por trecho, e gera um pacote (ZIP) para enviar de volta.
+Depois, as animações das aulas são ajustadas ao seu tempo de fala.
 
-COMO GRAVAR (3 aulas)
-  1. Clique em "Ligar microfone" e fale: o medidor no canto de cima tem que mexer.
-     Se quiser ouvir o som do video enquanto grava, use FONE DE OUVIDO.
-  2. Clique em "Gravar esta aula". Depois de uma contagem de 3 segundos o video comeca.
-  3. Leia o texto no ritmo do DESTAQUE AZUL. Ele acompanha o video.
-  4. Quando aparecer o quadro amarelo "Silencio", fique quieto: e o proprio video falando
-     (por exemplo, o Dr. Vladimir). A contagem mostra quanto falta.
-  5. Ao fim do video a gravacao para sozinha (ou clique em Parar / barra de espaco).
-  Pode gravar quantas vezes quiser: cada tentativa vira um "take". O botao "Ouvir" toca a
-  sua voz junto com a aula, e "Usar este" escolhe qual vai para o MP3.
-  "Ensaiar" passa o video sem gravar. Teclas: ESPACO grava/para, +/- tamanho da letra, F modo foco.
-
-COMO EXPORTAR
-  Na aula (ou no painel), clique em "Exportar MP3" e depois em "Baixar MP3".
-  O arquivo sai: mono, 48 kHz, 192 kbps, volume nivelado em -16 LUFS e com a MESMA DURACAO do video.
-  Nomes: 01_Diamante_CVD_narracao.mp3, 02_Piezo_narracao.mp3, 03_Corte_Seletivo_narracao.mp3.
-  O botao "Exportar as 3 aulas" no painel baixa os tres de uma vez.
-
-COMO COLOCAR NO VIDEO
-  Os videos estao na pasta "videos" (01_Diamante_CVD.mp4, 02_Piezo.mp4, 03_Corte_Seletivo.mp4).
-  No editor, coloque o MP3 de cada aula no ponto ZERO do video: ele ja esta alinhado.
-  Se a voz parecer adiantada ou atrasada, use "Ajuste fino de sincronia" na tela de exportar
-  (em milissegundos, sinal + atrasa a voz).
-
-ONDE FICAM AS GRAVACOES
-  Os takes ficam salvos neste navegador, neste computador. Nao apague os dados do navegador
-  antes de exportar. Use sempre o mesmo navegador.
+COMO USAR (computador ou celular)
+1. Abra o link no Chrome (ou Safari, no iPhone). Toque em "Ligar câmera e microfone" e permita o acesso.
+2. Escolha a câmera: Frontal, Traseira ou Sem imagem.
+   - Apoie o aparelho em um tripé ou na estante, com o rosto enquadrado.
+   - No celular, deite o aparelho: o vídeo sai na horizontal, como as aulas.
+3. Abra a aula, escolha o trecho e toque em "Gravar este trecho". Depois da contagem, leia no seu ritmo.
+   Pode ler devagar, parar para respirar e repetir uma frase: o texto acompanha.
+4. Ao terminar a última frase a gravação encerra sozinha (ou toque em "Terminar").
+   Ouça o take. Se não gostou, grave de novo. O take marcado com a estrela é o que vai no pacote.
+5. No painel, toque em "Baixar tudo (ZIP)" (ou "Baixar esta aula") e envie o arquivo de volta.
+   No celular aparece também o botão "Compartilhar / enviar".
 
 DICAS
-  - Grave em lugar silencioso, a cerca de 20 cm do microfone.
-  - O texto segue o ritmo do video. Se errar, nao precisa parar: grave outro take.
-  - As gravacoes e o MP3 nao saem do computador; nada e enviado pela internet.
+- Lugar silencioso e microfone a cerca de 20 cm da boca.
+- Nos trechos que terminam com um aviso ("aqui entra o Dr. Vladimir..."), pare de ler e espere o aviso.
+- O texto não acompanhou? Toque na palavra onde você está para ele voltar ao ponto certo.
+- O acompanhamento da voz usa o reconhecimento de fala do Chrome (precisa de internet).
+  No celular ele às vezes compete com o microfone: se travar, desmarque "Acompanhar a minha voz"
+  e o texto passa a seguir o seu ritmo médio (ajustável).
+- Para não perder nada: as gravações ficam salvas no navegador do aparelho. Não limpe os dados do site antes de baixar o ZIP.
+
+O QUE VAI NO ZIP
+- Um MP4 por trecho (imagem + som originais) e um MP3 com o áudio nivelado.
+- manifesto.json com o texto, a duração e o ponto onde a fala começa e termina em cada trecho.
+
+ABRIR NO COMPUTADOR SEM INTERNET
+Dê dois cliques em ABRIR_ESTUDIO.bat (o reconhecimento de voz precisa de internet; sem ela o texto segue o ritmo médio).
