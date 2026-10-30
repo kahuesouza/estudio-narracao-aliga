@@ -233,7 +233,7 @@ function loop() {
     const silencio = agora - E.ultimaVoz, perto = E.seg.pos >= E.tokens.length * 0.85;
     if (cfg.autoParar && agora - E.tIni > 4000 && E.ultimaVoz && ((E.seg.terminou() && silencio > 2000) || (perto && silencio > 3500))) terminar(true);
   }
-  $$('.medidor i', u.miolo.parentNode).forEach(m => m.style.width = Math.min(100, n * 260) + '%');
+  $$('.medidor i', u.miolo.parentNode).forEach(m => m.style.transform = `scaleX(${Math.min(1, n * 2.6)})`);
   if (i !== E.destIdx) {
     const W = E.palavras, a = E.destIdx;
     if (a < -1 || Math.abs(i - a) > 300) W.forEach((w, k) => w.el.className = i < 0 ? 'w' : k < i ? 'w dito' : k === i ? 'w agora' : 'w');

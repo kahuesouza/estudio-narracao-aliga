@@ -169,7 +169,7 @@ const Mic = {
 (function medidor() {
   const f = () => {
     const n = Mic.nivel(), db = 20 * Math.log10(n + 1e-6), pct = Math.max(0, Math.min(100, (db + 60) / 60 * 100));
-    $$('.medidor i').forEach(i => i.style.width = pct + '%');
+    $$('.medidor i').forEach(i => i.style.transform = `scaleX(${pct / 100})`);
     if (n > 0.02) Estudio.ultimoSom = performance.now();
     requestAnimationFrame(f);
   }; f();

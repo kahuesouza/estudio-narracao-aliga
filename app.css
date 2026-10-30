@@ -54,7 +54,7 @@ video.previa.espelhada{transform:scaleX(-1)}
 .w.agora{background:var(--azul-claro);border-radius:.18em;box-shadow:0 0 0 .08em var(--azul-claro)}
 .nota{font-size:.5em;font-weight:500;color:var(--mudo);margin:1.2em 0 1.6em;padding:.7em 1em;border-radius:.9em;background:var(--suave)}
 .medidor{position:absolute;left:0;right:0;bottom:0;height:3px;background:transparent;z-index:2}
-.medidor i{display:block;height:100%;width:0;background:var(--azul);transition:width .06s linear}
+.medidor i{display:block;height:100%;width:100%;background:var(--azul);transform:scaleX(0);transform-origin:left;transition:transform .06s linear}
 
 .rodape{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;gap:42px;padding:18px 16px calc(22px + env(safe-area-inset-bottom));z-index:4}
 .rec{width:80px;height:80px;border-radius:50%;border:5px solid #fff;display:grid;place-items:center;background:rgba(255,255,255,.18);box-shadow:0 4px 18px rgba(15,23,42,.3)}
