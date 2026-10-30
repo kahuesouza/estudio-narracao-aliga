@@ -1,35 +1,10 @@
-ESTÚDIO DE NARRAÇÃO · A LIGA
-============================
+NARRAÇÃO · A LIGA
 
-O QUE É
-Um aplicativo para você narrar as 3 aulas no SEU ritmo. O texto aparece na tela e acompanha a sua voz.
-O aplicativo grava a sua imagem (câmera) e o seu som, trecho por trecho, e gera um pacote (ZIP) para enviar de volta.
-Depois, as animações das aulas são ajustadas ao seu tempo de fala.
+1. Abra o link no Chrome (Android/computador) ou Safari (iPhone) e permita câmera e microfone.
+2. Toque em um trecho da lista. Use "Virar" para trocar entre câmera frontal e traseira.
+3. Toque no botão vermelho e, depois da contagem, leia no seu ritmo. O texto anda enquanto você fala e para quando você para.
+   Se ele ficar atrás ou adiantar, ajuste a velocidade em "Ajustes", ou toque na palavra onde você está.
+4. Toque no quadrado vermelho para parar. Confira o vídeo; se não gostou, grave de novo.
+5. Na lista, toque em "Enviar gravações" e envie o arquivo ZIP de volta.
 
-COMO USAR (computador ou celular)
-1. Abra o link no Chrome (ou Safari, no iPhone). Toque em "Ligar câmera e microfone" e permita o acesso.
-2. Escolha a câmera: Frontal, Traseira ou Sem imagem.
-   - Apoie o aparelho em um tripé ou na estante, com o rosto enquadrado.
-   - No celular, deite o aparelho: o vídeo sai na horizontal, como as aulas.
-3. Abra a aula, escolha o trecho e toque em "Gravar este trecho". Depois da contagem, leia no seu ritmo.
-   Pode ler devagar, parar para respirar e repetir uma frase: o texto acompanha.
-4. Ao terminar a última frase a gravação encerra sozinha (ou toque em "Terminar").
-   Ouça o take. Se não gostou, grave de novo. O take marcado com a estrela é o que vai no pacote.
-5. No painel, toque em "Baixar tudo (ZIP)" (ou "Baixar esta aula") e envie o arquivo de volta.
-   No celular aparece também o botão "Compartilhar / enviar".
-
-DICAS
-- Lugar silencioso e microfone a cerca de 20 cm da boca.
-- Nos trechos que terminam com um aviso ("aqui entra o Dr. Vladimir..."), pare de ler e espere o aviso.
-- O texto não acompanhou? Toque na palavra onde você está para ele voltar ao ponto certo.
-- O acompanhamento da voz usa o reconhecimento de fala do Chrome (precisa de internet).
-  No celular ele às vezes compete com o microfone: se travar, desmarque "Acompanhar a minha voz"
-  e o texto passa a seguir o seu ritmo médio (ajustável).
-- Para não perder nada: as gravações ficam salvas no navegador do aparelho. Não limpe os dados do site antes de baixar o ZIP.
-
-O QUE VAI NO ZIP
-- Um MP4 por trecho (imagem + som originais) e um MP3 com o áudio nivelado.
-- manifesto.json com o texto, a duração e o ponto onde a fala começa e termina em cada trecho.
-
-ABRIR NO COMPUTADOR SEM INTERNET
-Dê dois cliques em ABRIR_ESTUDIO.bat (o reconhecimento de voz precisa de internet; sem ela o texto segue o ritmo médio).
+Dicas: lugar silencioso, aparelho apoiado e deitado, microfone a uns 20 cm. Não limpe os dados do navegador antes de enviar.
