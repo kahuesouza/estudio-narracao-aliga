@@ -32,6 +32,13 @@ h1{font-size:30px;font-weight:700;letter-spacing:-.025em;line-height:1.1}
 .btn.sec{background:var(--suave);color:var(--texto)}
 .btn.zap{background:#25d366;color:#fff}
 .btn.largo{display:flex;width:100%;padding:16px}
+.btn.grande{margin-top:14px;padding:20px;font-size:20px;background:var(--verm)}
+.chamada{margin:30px 0 16px;font-size:clamp(32px,9.4vw,52px);font-weight:800;letter-spacing:-.03em;line-height:1.03}
+.roteiro-livre{display:block;width:100%;min-height:42vh;padding:18px;border:2px solid var(--linha);border-radius:22px;background:var(--suave);color:var(--texto);font:inherit;font-size:18px;line-height:1.5;resize:vertical}
+.roteiro-livre:focus{outline:none;border-color:var(--azul);background:#fff}
+.info-roteiro{margin-top:10px;color:var(--mudo);font-size:14px}
+.prontos{margin-top:34px;border-top:1px solid var(--linha);padding-top:6px}
+.prontos summary{cursor:pointer;padding:14px 2px;font-weight:600;color:var(--mudo)}
 
 /* ---------- estúdio: câmera cheia + cartão de texto ---------- */
 .cena{position:fixed;inset:0;background:#e9edf2;overflow:hidden}

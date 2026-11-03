@@ -34,7 +34,9 @@ function ligarMic() {
 }
 function ir(tela, id, blocoId) {
   Estudio.sair();
-  tela === 'estudio' ? telaEstudio(PARTES.find(p => p.id === id), blocoId) : telaPainel();
+  tela === 'estudio'
+    ? telaEstudio(id === 'livre' ? { ...PARTE_LIVRE, blocos: PARTE_LIVRE.blocos.filter(b => b.id === blocoId) } : PARTES.find(p => p.id === id), blocoId)
+    : telaPainel();
 }
 
 /* ------------------------------------------------------------------ ajustes */
@@ -76,6 +78,7 @@ async function telaPainel() {
   const pg = h('div', { class: 'pagina' });
   let total = 0, feitos = 0;
   const aulas = [];
+  for (const b of PARTE_LIVRE.blocos) { if (await takeDoBloco(chaveBloco(PARTE_LIVRE, b))) feitos++; }
   for (const p of PARTES) {
     const linhas = [];
     for (const b of p.blocos) {
@@ -87,13 +90,26 @@ async function telaPainel() {
     }
     aulas.push(h('section', { class: 'aula' }, h('h2', {}, `${rotuloParte(p)} · ${p.titulo}`), linhas));
   }
+  const area = h('textarea', { class: 'roteiro-livre', placeholder: 'Escreva ou cole o texto aqui…', spellcheck: 'false', 'aria-label': 'Cole aqui o seu roteiro' });
+  area.value = lerLS('estudio-rascunho', '');
+  const info = h('p', { class: 'info-roteiro' });
+  const bGravar = h('button', { class: 'btn largo grande' }, 'Gravar');
+  const atualizar = () => {
+    const n = area.value.split(/\s+/).filter(Boolean).length;
+    info.textContent = n ? `${n} palavras · cerca de ${fmt(n / cfg.wpm * 60)} de leitura` : 'O texto rola sozinho na tela, na velocidade que você escolher.';
+    bGravar.disabled = n < 3;
+  };
+  area.addEventListener('input', () => { gravarLS('estudio-rascunho', area.value); atualizar(); });
+  bGravar.onclick = () => { const b = registrarRoteiro(area.value); ligarMic(); ir('estudio', 'livre', b.id); };
+  atualizar();
   pg.append(
     h('header', { class: 'cab' },
       h('div', {}, h('h1', {}, 'Narração'), h('p', { class: 'sub' }, 'A Liga · CVDentus')),
       h('button', { class: 'link', onclick: dialogoAjustes }, 'Ajustes')),
-    h('p', { class: 'intro' }, 'Toque em um trecho e leia. O texto rola sozinho; ajuste a velocidade e o tamanho no cartão do texto.'),
-    ...aulas);
-  raiz.append(pg, h('div', { class: 'rodape-fixo' }, h('button', { class: 'btn largo', disabled: feitos ? null : '', onclick: () => dialogoPacote() }, feitos ? `Enviar gravações · ${feitos} de ${total}` : 'Nenhum trecho gravado ainda')));
+    h('h2', { class: 'chamada' }, 'COLE AQUI O SEU ROTEIRO E GRAVE'),
+    area, info, bGravar,
+    h('details', { class: 'prontos' }, h('summary', {}, 'Roteiros prontos da A Liga'), ...aulas));
+  raiz.append(pg, h('div', { class: 'rodape-fixo' }, h('button', { class: 'btn largo', disabled: feitos ? null : '', onclick: () => dialogoPacote() }, feitos ? `Enviar gravações · ${feitos} ${feitos > 1 ? 'gravados' : 'gravado'}` : 'Nenhuma gravação ainda')));
 }
 
 /* ------------------------------------------------------------------ teleprompter */
@@ -341,16 +357,17 @@ async function dialogoPacote(parteUnica) {
     botao.disabled = false;
   };
   let tudo = 0, total = 0, compartilhaArquivos = false;
-  const textoZap = 'Gravações da narração - A Liga (CVDentus)';
-  for (const p of (parteUnica ? [parteUnica] : PARTES)) {
+  const ativas = [], textoZap = 'Gravações da narração - A Liga (CVDentus)';
+  for (const p of (parteUnica ? [parteUnica] : [PARTE_LIVRE, ...PARTES])) {
     let n = 0, bytes = 0, ib = 0; const arqs = [];
     for (const b of p.blocos) {
-      ib++; total++; const t = await takeDoBloco(chaveBloco(p, b));
+      ib++; const t = await takeDoBloco(chaveBloco(p, b));
       if (!t) continue;
       n++;
       if (t.video) { bytes += t.video.size; arqs.push(new File([t.video], `${p.arquivo}_${String(ib).padStart(2, '0')}_${slug(b.titulo)}.${extDe(t.mime)}`, { type: (t.mime || 'video/mp4').split(';')[0] })); }
     }
-    tudo += n;
+    if (!n) continue;                                          // só aparecem as partes que já têm gravação
+    ativas.push(p); total += p.blocos.length; tudo += n;
     // os arquivos já estão prontos aqui, para o toque no botão abrir direto a lista de aplicativos (o navegador exige isso)
     const zapOk = !!(navigator.canShare && arqs.length && navigator.canShare({ files: arqs }));
     compartilhaArquivos = compartilhaArquivos || zapOk;
@@ -360,9 +377,9 @@ async function dialogoPacote(parteUnica) {
     lista.append(h('div', { class: 'item-pac' }, h('span', { class: 't' }, `${rotuloParte(p)} · ${p.titulo}`, h('small', {}, `${n} de ${p.blocos.length} trechos${bytes ? ' · MP4 ' + mb(bytes) : ''}`)), bt));
   }
   const completo = total > 0 && tudo === total;
-  const bTudo = h('button', { class: 'btn', disabled: completo ? null : '' }, 'Baixar tudo em ZIP'); bTudo.onclick = () => baixarEscopo(parteUnica ? [parteUnica] : PARTES, parteUnica ? parteUnica.arquivo : 'aulas', bTudo);
+  const bTudo = h('button', { class: 'btn', disabled: completo ? null : '' }, 'Baixar tudo em ZIP'); bTudo.onclick = () => baixarEscopo(ativas, parteUnica ? parteUnica.arquivo : 'narracao', bTudo);
   saida.textContent = completo ? 'Tudo gravado! O ZIP traz os MP4 e MP3 de todos os trechos, com texto e tempos.'
-    : `Cada aula vai em MP4, que abre direto no WhatsApp. O ZIP com tudo libera quando todos os trechos estiverem gravados (${tudo} de ${total}).`;
+    : `Cada grupo vai em MP4, que abre direto no WhatsApp. O ZIP com tudo libera quando todos os trechos de cada aula estiverem gravados (${tudo} de ${total}).`;
   if (!compartilhaArquivos && tudo) compartilhar.append(
     h('button', { class: 'btn zap', onclick: () => window.open('https://wa.me/?text=' + encodeURIComponent(textoZap), '_blank', 'noopener') }, 'Abrir WhatsApp'),
     h('small', { class: 'dica' }, 'Este navegador não envia arquivos direto: baixe os MP4 e anexe na conversa (clipe, Vídeo).'));

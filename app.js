@@ -34,7 +34,24 @@ const aviso = (t, ms = 3200) => { const a = $('#aviso'); a.textContent = t; a.cl
 /* sufixo muda quando o roteiro muda, para não reaproveitar gravações de textos antigos */
 const VERSAO_ROTEIRO = 'r2';
 const chaveBloco = (parte, bloco) => `${parte.id}/${bloco.id}@${VERSAO_ROTEIRO}`;
-const rotuloParte = p => p.numero ? `Aula ${p.numero}` : 'Abertura';
+const rotuloParte = p => p.rotulo || (p.numero ? `Aula ${p.numero}` : 'Abertura');
+
+/* roteiro livre: texto colado pelo narrador; cada texto diferente vira um trecho próprio, guardado no aparelho */
+const lerLS = (k, v) => { try { const r = JSON.parse(localStorage.getItem(k)); return r == null ? v : r; } catch (e) { return v; } };
+const gravarLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const hashTexto = s => { let x = 5381; for (let i = 0; i < s.length; i++) x = ((x << 5) + x + s.charCodeAt(i)) | 0; return (x >>> 0).toString(36); };
+const PARTE_LIVRE = { id: 'livre', numero: 0, rotulo: 'Meu roteiro', titulo: 'Texto colado', arquivo: 'Meu_Roteiro', video: '', blocos: lerLS('estudio-livres', []) };
+function registrarRoteiro(texto) {
+  const paragrafos = texto.replace(/\r/g, '').split(/\n+/).map(s => s.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const id = 'r' + hashTexto(paragrafos.join('\n'));
+  let b = PARTE_LIVRE.blocos.find(x => x.id === id);
+  if (!b) {
+    const ini = paragrafos.join(' ').split(' ').slice(0, 6).join(' ');
+    b = { id, titulo: ini.length > 38 ? ini.slice(0, 38) + '…' : ini, paragrafos, depois: '' };
+    PARTE_LIVRE.blocos.push(b); gravarLS('estudio-livres', PARTE_LIVRE.blocos.slice(-30));
+  }
+  return b;
+}
 const palavrasDoBloco = b => b.paragrafos.join(' ').split(/\s+/).filter(Boolean).length;
 const extDe = mime => /mp4/.test(mime || '') ? 'mp4' : 'webm';
 const mb = n => (n / 1048576).toFixed(n > 1.05e8 ? 0 : 1) + ' MB';
