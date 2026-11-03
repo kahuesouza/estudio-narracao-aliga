@@ -53,18 +53,10 @@ function dialogoAjustes() {
   pintar();
   const sel = h('select', {}, h('option', { value: '' }, 'Microfone padrão'));
   listarMics(sel); sel.addEventListener('change', () => { cfg.dev = sel.value; salvarCfg(); if (Mic.ligado) ligarMic(); });
-  const fonte = h('input', { type: 'range', min: 22, max: 72, value: cfg.fonte });
-  fonte.addEventListener('input', () => { cfg.fonte = +fonte.value; salvarCfg(); if (E.ui) { E.ui.tele.style.fontSize = cfg.fonte + 'px'; E.alvoEl = null; } });
-  const rotV = h('b', {}, `${cfg.wpm}`);
-  const vel = h('input', { type: 'range', min: 90, max: 220, step: 5, value: cfg.wpm });
-  vel.addEventListener('input', () => { cfg.wpm = +vel.value; rotV.textContent = cfg.wpm; salvarCfg(); if (E.seg) E.seg.ajustarWpm(cfg.wpm, performance.now()); });
   d.append(h('h2', {}, 'Ajustes'),
     h('div', { class: 'grupo' }, h('label', {}, 'Câmera'), seg, parado ? null : h('small', { class: 'dica' }, 'Troque a câmera antes de gravar.')),
     h('div', { class: 'grupo' }, h('label', {}, 'Microfone'), sel),
-    h('div', { class: 'grupo' }, h('label', {}, 'Tamanho da letra'), fonte),
-    h('div', { class: 'grupo' }, h('label', {}, h('span', {}, 'Velocidade do texto · ', rotV, ' palavras por minuto')), vel,
-      h('small', { class: 'dica' }, 'O texto anda enquanto você fala e para quando você para. Se ele ficar atrás de você, aumente; se adiantar, diminua. Toque numa palavra para voltar ao ponto certo.')),
-    interruptor('autoParar', 'Parar sozinho ao terminar', 'Encerra depois da última frase.'),
+    interruptor('autoParar', 'Parar sozinho ao terminar', 'Encerra depois do fim do texto, quando você fica em silêncio.'),
     interruptor('espelho', 'Espelhar o texto', 'Só para teleprompter de vidro.', () => { if (E.ui) E.ui.tele.classList.toggle('espelho', cfg.espelho); }),
     interruptor('ruido', 'Reduzir ruído do ambiente', 'Ajuda contra ventilador e ar-condicionado.'),
     h('div', { class: 'acoes' }, h('button', { class: 'btn', onclick: () => d.close() }, 'Pronto')));
@@ -99,7 +91,7 @@ async function telaPainel() {
     h('header', { class: 'cab' },
       h('div', {}, h('h1', {}, 'Narração'), h('p', { class: 'sub' }, 'A Liga · CVDentus')),
       h('button', { class: 'link', onclick: dialogoAjustes }, 'Ajustes')),
-    h('p', { class: 'intro' }, 'Toque em um trecho e leia no seu ritmo. O texto acompanha a sua voz.'),
+    h('p', { class: 'intro' }, 'Toque em um trecho e leia. O texto rola sozinho; ajuste a velocidade e o tamanho no cartão do texto.'),
     ...aulas);
   raiz.append(pg, h('div', { class: 'rodape-fixo' }, h('button', { class: 'btn largo', disabled: feitos ? null : '', onclick: () => dialogoPacote() }, feitos ? `Enviar gravações · ${feitos} de ${total}` : 'Nenhum trecho gravado ainda')));
 }
@@ -110,7 +102,6 @@ async function telaEstudio(parte, blocoId) {
   const raiz = $('#tela'); raiz.innerHTML = '';
   const tele = h('div', { class: 'tele' }); tele.style.fontSize = cfg.fonte + 'px'; tele.classList.toggle('espelho', cfg.espelho);
   const miolo = h('div', { class: 'tele-miolo' }, tele);
-  const medidor = h('div', { class: 'medidor' }, h('i'));
   const previa = h('video', { class: 'previa off', playsinline: '', autoplay: '', muted: '' });
   const titulo = h('div', { class: 'tit-trecho' });
   const bAnt = h('button', { class: 'chip so-ico', 'aria-label': 'Trecho anterior', onclick: () => vizinho(-1) }, '‹');
@@ -127,8 +118,27 @@ async function telaEstudio(parte, blocoId) {
     h('button', { class: 'chip', onclick: () => ir('painel'), 'aria-label': 'Voltar aos trechos' }, '←'),
     h('div', { class: 'meio' }, bAnt, titulo, bProx),
     h('button', { class: 'chip', onclick: dialogoAjustes }, 'Ajustes'));
-  const cena = h('div', { class: 'cena' }, previa, topo, tempo,
-    h('div', { class: 'cartao-tele' }, miolo, medidor),
+  const ico = svg => h('span', { class: 'ico-svg', html: svg });
+  const vel = h('input', { type: 'range', min: 60, max: 260, step: 5, value: cfg.wpm, 'aria-label': 'Velocidade do teleprompter' });
+  vel.addEventListener('input', () => { cfg.wpm = +vel.value; salvarCfg(); if (E.seg) E.seg.ajustarWpm(cfg.wpm, performance.now()); });
+  const tam = h('input', { type: 'range', min: 18, max: 48, step: 1, value: Math.max(18, Math.min(48, cfg.fonte)), 'aria-label': 'Tamanho do texto' });
+  tam.addEventListener('input', () => { cfg.fonte = +tam.value; tele.style.fontSize = cfg.fonte + 'px'; salvarCfg(); E.alvoEl = null; if (E.estado === 'parado') resetarPosicao(); });
+  const pop = h('div', { class: 'pop-tele' }, h('label', {}, 'Velocidade do teleprompter'), vel, h('label', {}, 'Tamanho do texto'), tam);
+  const cena = h('div', { class: 'cena' }, previa, topo, tempo);
+  const bX = h('button', { class: 'tele-ico tele-x', 'aria-label': 'Fechar o texto', onclick: () => { pop.classList.remove('on'); cena.classList.add('sem-tele'); } }, ico('<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'));
+  const bAj = h('button', { class: 'tele-ico tele-aj', 'aria-label': 'Velocidade e tamanho do texto', onclick: () => pop.classList.toggle('on') }, ico('<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 7h9M18 7h3M3 17h4M13 17h8"/><circle cx="15" cy="7" r="2.6"/><circle cx="10" cy="17" r="2.6"/></svg>'));
+  const bTam = h('div', { class: 'tele-ico tele-tam', role: 'separator', 'aria-label': 'Arraste para mudar a altura do quadro' }, ico('<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 9L9 20M20 15l-5 5"/></svg>'));
+  const cartao = h('div', { class: 'cartao-tele' }, miolo, bX, bAj, bTam, pop);
+  if (cfg.altCartao) cartao.style.setProperty('--alt-cartao', cfg.altCartao + 'px');
+  bTam.addEventListener('pointerdown', ev => {
+    ev.preventDefault(); bTam.setPointerCapture(ev.pointerId);
+    const y0 = ev.clientY, h0 = cartao.offsetHeight;
+    const mv = e2 => { const alt = Math.round(Math.max(110, Math.min(innerHeight * 0.7, h0 + e2.clientY - y0))); cartao.style.setProperty('--alt-cartao', alt + 'px'); cfg.altCartao = alt; E.alvoEl = null; if (E.estado === 'parado') resetarPosicao(); };
+    const fim = () => { bTam.removeEventListener('pointermove', mv); bTam.removeEventListener('pointerup', fim); bTam.removeEventListener('pointercancel', fim); salvarCfg(); };
+    bTam.addEventListener('pointermove', mv); bTam.addEventListener('pointerup', fim); bTam.addEventListener('pointercancel', fim);
+  });
+  cena.addEventListener('pointerdown', ev => { if (!pop.contains(ev.target) && !bAj.contains(ev.target)) pop.classList.remove('on'); });
+  cena.append(cartao, h('button', { class: 'chip mostrar-tele', onclick: () => cena.classList.remove('sem-tele') }, 'Mostrar texto'),
     contagem,
     h('div', { class: 'rodape' }, bVirar, bRec, bRever));
   raiz.append(cena);
@@ -171,7 +181,7 @@ function resetarPosicao() {
   const E = Estudio; if (!E.bloco) return;
   E.seg = Seguir.criar(E.tokens, { wpm: cfg.wpm }); E.destIdx = -2; E.alvoEl = null;
   E.palavras.forEach(w => w.el.className = 'w');
-  E.ui.tele.style.transform = `translate(-50%, ${Math.round(E.ui.miolo.clientHeight * 0.30)}px)`;
+  E.ui.tele.style.transform = `translate(-50%, ${Math.round(E.ui.miolo.clientHeight * 0.34)}px)`;
 }
 function teclas(e) {
   if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) || $('#dlg').open) return;
@@ -227,13 +237,11 @@ function loop() {
   let i = -1;
   if (E.estado === 'gravando' || E.estado === 'ensaio') {
     if (n > E.limiar) E.ultimaVoz = agora;
-    if (agora - E.ultimaVoz > 380 && E.seg.modoRitmo) E.seg.t0 += dt;     // sem voz: o texto fica parado
     i = destaqueAtual(agora);
     if (E.estado === 'gravando') $('span', u.tempo).textContent = fmt((agora - E.tIni) / 1000);
     const silencio = agora - E.ultimaVoz, perto = E.seg.pos >= E.tokens.length * 0.85;
     if (cfg.autoParar && agora - E.tIni > 4000 && E.ultimaVoz && ((E.seg.terminou() && silencio > 2000) || (perto && silencio > 3500))) terminar(true);
   }
-  $$('.medidor i', u.miolo.parentNode).forEach(m => m.style.transform = `scaleX(${Math.min(1, n * 2.6)})`);
   if (i !== E.destIdx) {
     const W = E.palavras, a = E.destIdx;
     if (a < -1 || Math.abs(i - a) > 300) W.forEach((w, k) => w.el.className = i < 0 ? 'w' : k < i ? 'w dito' : k === i ? 'w agora' : 'w');
@@ -241,11 +249,12 @@ function loop() {
     else { if (a >= 0) W[a].el.className = 'w'; for (let k = i + 1; k < a; k++) W[k].el.className = 'w'; if (i >= 0) W[i].el.className = 'w agora'; }
     E.destIdx = i; E.alvoEl = null;
   }
-  const alvo = i >= 0 ? E.palavras[i].el : null;
-  if (alvo && alvo !== E.alvoEl) {
-    E.alvoEl = alvo;
-    const H = u.miolo.clientHeight, y = alvo.offsetTop + alvo.offsetHeight / 2;
-    u.tele.style.transform = `translate(-50%, ${Math.round(H * 0.38 - y)}px)`;
+  if (i >= 0) {                                              // rolagem automática contínua: desliza entre uma palavra e a seguinte
+    const W = E.palavras, w0 = W[i], w1 = W[Math.min(i + 1, W.length - 1)];
+    const p = Math.max(0, (agora - E.seg.t0) * E.seg.wpm / 60000), vao = w1.ini - w0.ini;
+    const f = vao > 0 ? Math.max(0, Math.min(1, (p - w0.ini) / vao)) : 0;
+    const y0 = w0.el.offsetTop + w0.el.offsetHeight / 2, y1 = w1.el.offsetTop + w1.el.offsetHeight / 2;
+    u.tele.style.transform = `translate(-50%, ${(u.miolo.clientHeight * 0.34 - (y0 + (y1 - y0) * f)).toFixed(1)}px)`;
   }
 }
 

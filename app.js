@@ -25,11 +25,11 @@ function h(tag, props = {}, ...filhos) {
 }
 
 /* ------------------------------------------------------------------ configuração */
-const PADRAO = { eco: false, ruido: true, agc: false, dev: '', fonte: celular ? 30 : 38, espelho: false, wpm: 150, autoParar: true,
+const PADRAO = { eco: false, ruido: true, agc: false, dev: '', fonte: celular ? 24 : 28, espelho: false, wpm: 150, autoParar: true,
                  camera: 'user', alvoLufs: -16, hpf: true, nr: true };
 let cfg = { ...PADRAO };
-try { Object.assign(cfg, JSON.parse(localStorage.getItem('estudio-cfg4') || '{}')); } catch (e) {}
-const salvarCfg = () => { try { localStorage.setItem('estudio-cfg4', JSON.stringify(cfg)); } catch (e) {} };
+try { Object.assign(cfg, JSON.parse(localStorage.getItem('estudio-cfg5') || '{}')); } catch (e) {}
+const salvarCfg = () => { try { localStorage.setItem('estudio-cfg5', JSON.stringify(cfg)); } catch (e) {} };
 const aviso = (t, ms = 3200) => { const a = $('#aviso'); a.textContent = t; a.classList.add('on'); clearTimeout(aviso.t); aviso.t = setTimeout(() => a.classList.remove('on'), ms); };
 /* sufixo muda quando o roteiro muda, para não reaproveitar gravações de textos antigos */
 const VERSAO_ROTEIRO = 'r2';
