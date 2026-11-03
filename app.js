@@ -31,7 +31,10 @@ let cfg = { ...PADRAO };
 try { Object.assign(cfg, JSON.parse(localStorage.getItem('estudio-cfg4') || '{}')); } catch (e) {}
 const salvarCfg = () => { try { localStorage.setItem('estudio-cfg4', JSON.stringify(cfg)); } catch (e) {} };
 const aviso = (t, ms = 3200) => { const a = $('#aviso'); a.textContent = t; a.classList.add('on'); clearTimeout(aviso.t); aviso.t = setTimeout(() => a.classList.remove('on'), ms); };
-const chaveBloco = (parte, bloco) => `${parte.id}/${bloco.id}`;
+/* sufixo muda quando o roteiro muda, para não reaproveitar gravações de textos antigos */
+const VERSAO_ROTEIRO = 'r2';
+const chaveBloco = (parte, bloco) => `${parte.id}/${bloco.id}@${VERSAO_ROTEIRO}`;
+const rotuloParte = p => p.numero ? `Aula ${p.numero}` : 'Abertura';
 const palavrasDoBloco = b => b.paragrafos.join(' ').split(/\s+/).filter(Boolean).length;
 const extDe = mime => /mp4/.test(mime || '') ? 'mp4' : 'webm';
 const mb = n => (n / 1048576).toFixed(n > 1.05e8 ? 0 : 1) + ' MB';

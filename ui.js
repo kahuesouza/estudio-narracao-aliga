@@ -93,7 +93,7 @@ async function telaPainel() {
         h('span', { class: 't' }, b.titulo, h('small', {}, t ? `Gravado · ${fmt(t.dur)}` : `${palavrasDoBloco(b)} palavras · cerca de ${fmt(estimativa(b))}`)),
         h('span', { class: 'seta' }, '›')));
     }
-    aulas.push(h('section', { class: 'aula' }, h('h2', {}, `Aula ${p.numero} · ${p.titulo}`), linhas));
+    aulas.push(h('section', { class: 'aula' }, h('h2', {}, `${rotuloParte(p)} · ${p.titulo}`), linhas));
   }
   pg.append(
     h('header', { class: 'cab' },
@@ -141,7 +141,7 @@ async function telaEstudio(parte, blocoId) {
 async function selecionarBloco(id) {
   const E = Estudio; E.bloco = E.parte.blocos.find(b => b.id === id) || E.parte.blocos[0];
   const i = E.parte.blocos.indexOf(E.bloco);
-  E.ui.titulo.innerHTML = ''; E.ui.titulo.append(h('b', {}, E.bloco.titulo), h('small', {}, `Trecho ${i + 1} de ${E.parte.blocos.length} · Aula ${E.parte.numero}`));
+  E.ui.titulo.innerHTML = ''; E.ui.titulo.append(h('b', {}, E.bloco.titulo), h('small', {}, `Trecho ${i + 1} de ${E.parte.blocos.length} · ${rotuloParte(E.parte)}`));
   E.ui.bAnt.disabled = i === 0; E.ui.bProx.disabled = i === E.parte.blocos.length - 1;
   montarTele(E.bloco); resetarPosicao(); await atualizarRever();
 }
@@ -316,9 +316,19 @@ async function dialogoPacote(parteUnica) {
       const r = await montarZip(escopo, saida); if (!r) return;
       const arq = new File([r.blob], `narracao_${nome}_${new Date().toISOString().slice(0, 10)}.zip`, { type: 'application/zip' });
       baixar(r.blob, arq.name);
-      saida.textContent = `Pronto: ${r.n} trechos (${mb(r.blob.size)}). O arquivo foi salvo em Downloads.`;
+      saida.textContent = `Pronto: ${r.n} ${r.n > 1 ? "trechos" : "trecho"} (${mb(r.blob.size)}). O arquivo foi salvo em Downloads.`;
       compartilhar.innerHTML = '';
-      if (navigator.canShare && navigator.canShare({ files: [arq] })) compartilhar.append(h('button', { class: 'btn', onclick: () => navigator.share({ files: [arq], title: 'Narração das aulas' }).catch(() => {}) }, 'Compartilhar / enviar'));
+      const texto = 'Gravações da narração - A Liga (CVDentus)';
+      if (navigator.canShare && navigator.canShare({ files: [arq] })) {
+        // a folha de compartilhamento do aparelho lista o WhatsApp; precisa de um toque novo, por isso o botão aparece só depois do arquivo pronto
+        compartilhar.append(
+          h('button', { class: 'btn zap', onclick: () => navigator.share({ files: [arq], title: texto, text: texto }).catch(() => {}) }, 'Enviar pelo WhatsApp'),
+          h('small', { class: 'dica' }, 'Na lista que abrir, escolha WhatsApp e o contato. Outros aplicativos também aparecem ali.'));
+      } else {
+        compartilhar.append(
+          h('button', { class: 'btn zap', onclick: () => window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank', 'noopener') }, 'Abrir WhatsApp'),
+          h('small', { class: 'dica' }, 'Este navegador não envia arquivos direto. Abra a conversa e anexe o arquivo salvo em Downloads (clipe, Documento).'));
+      }
     } catch (e) { console.error(e); saida.textContent = 'Não consegui montar o arquivo: ' + e.message + '. Tente baixar uma aula por vez.'; }
     botao.disabled = false;
   };
@@ -328,7 +338,7 @@ async function dialogoPacote(parteUnica) {
     for (const b of p.blocos) { const t = await takeDoBloco(chaveBloco(p, b)); if (t) { n++; bytes += t.video ? t.video.size : 0; } }
     tudo += n;
     const bt = h('button', { class: 'btn sec', disabled: n ? null : '' }, 'Baixar'); bt.onclick = () => baixarEscopo([p], p.arquivo, bt);
-    lista.append(h('div', { class: 'item-pac' }, h('span', { class: 't' }, `Aula ${p.numero} · ${p.titulo}`, h('small', {}, `${n} de ${p.blocos.length} trechos${bytes ? ' · ' + mb(bytes) : ''}`)), bt));
+    lista.append(h('div', { class: 'item-pac' }, h('span', { class: 't' }, `${rotuloParte(p)} · ${p.titulo}`, h('small', {}, `${n} de ${p.blocos.length} trechos${bytes ? ' · ' + mb(bytes) : ''}`)), bt));
   }
   const bTudo = h('button', { class: 'btn', disabled: tudo ? null : '' }, 'Baixar tudo em um arquivo'); bTudo.onclick = () => baixarEscopo(parteUnica ? [parteUnica] : PARTES, parteUnica ? parteUnica.arquivo : 'aulas', bTudo);
   d.append(h('h2', {}, 'Enviar gravações'), lista, saida, compartilhar, h('div', { class: 'acoes' }, bTudo, h('button', { class: 'btn sec', onclick: () => d.close() }, 'Fechar')));
