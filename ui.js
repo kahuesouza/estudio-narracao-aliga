@@ -276,8 +276,14 @@ async function abrirTake(take, recem) {
   let midia;
   if (t.video) { url = URL.createObjectURL(t.video); midia = h('video', { class: 'rev', src: url, controls: '', playsinline: '' }); }
   d.onclose = () => { parar_(); if (url) { URL.revokeObjectURL(url); url = null; } };
+  let zap = null;
+  if (t.video) {
+    const arq = new File([t.video], `${E.parte ? E.parte.arquivo : 'trecho'}_${slug(E.bloco ? E.bloco.titulo : 'trecho')}.${extDe(t.mime)}`, { type: (t.mime || 'video/mp4').split(';')[0] });
+    if (navigator.canShare && navigator.canShare({ files: [arq] })) zap = h('button', { class: 'btn zap', onclick: () => navigator.share({ files: [arq], title: 'Gravação da narração - A Liga' }).catch(() => {}) }, 'Enviar pelo WhatsApp');
+  }
   d.append(h('h2', {}, recem ? 'Gravado! Confira' : 'Rever'), h('p', { class: 'dica' }, `${E.bloco ? E.bloco.titulo : ''} · ${fmt(x.length / SR)}`), midia || cnv,
     h('div', { class: 'acoes' },
+      zap,
       t.video ? null : h('button', { class: 'btn sec', onclick: ouvir }, '▶ Ouvir'),
       h('button', { class: 'btn sec', onclick: async () => { if (confirm('Descartar esta gravação?')) { await BD.del(t.id); d.close(); if (E.ui) await atualizarRever(); else telaPainel(); } } }, 'Descartar'),
       h('button', { class: 'btn', onclick: () => d.close() }, recem ? 'Está bom' : 'Fechar')));
@@ -316,7 +322,7 @@ async function montarZip(escopo, saida) {
 }
 async function dialogoPacote(parteUnica) {
   const d = $('#dlg'); d.innerHTML = '';
-  const saida = h('p', { class: 'dica' }, 'Cada trecho vai em MP4 (imagem e som) e MP3 (áudio nivelado), com um arquivo de texto e tempos.');
+  const saida = h('p', { class: 'dica' });
   const compartilhar = h('div', { class: 'acoes' });
   const lista = h('div', { class: 'lista-pac' });
   const baixarEscopo = async (escopo, nome, botao) => {
@@ -327,29 +333,39 @@ async function dialogoPacote(parteUnica) {
       baixar(r.blob, arq.name);
       saida.textContent = `Pronto: ${r.n} ${r.n > 1 ? "trechos" : "trecho"} (${mb(r.blob.size)}). O arquivo foi salvo em Downloads.`;
       compartilhar.innerHTML = '';
-      const texto = 'Gravações da narração - A Liga (CVDentus)';
       if (navigator.canShare && navigator.canShare({ files: [arq] })) {
-        // a folha de compartilhamento do aparelho lista o WhatsApp; precisa de um toque novo, por isso o botão aparece só depois do arquivo pronto
-        compartilhar.append(
-          h('button', { class: 'btn zap', onclick: () => navigator.share({ files: [arq], title: texto, text: texto }).catch(() => {}) }, 'Enviar pelo WhatsApp'),
-          h('small', { class: 'dica' }, 'Na lista que abrir, escolha WhatsApp e o contato. Outros aplicativos também aparecem ali.'));
-      } else {
-        compartilhar.append(
-          h('button', { class: 'btn zap', onclick: () => window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank', 'noopener') }, 'Abrir WhatsApp'),
-          h('small', { class: 'dica' }, 'Este navegador não envia arquivos direto. Abra a conversa e anexe o arquivo salvo em Downloads (clipe, Documento).'));
+        // o botão só aparece com o ZIP pronto: o compartilhamento exige um toque novo
+        compartilhar.append(h('button', { class: 'btn sec', onclick: () => navigator.share({ files: [arq], title: 'Narração das aulas' }).catch(() => {}) }, 'Compartilhar o ZIP'));
       }
     } catch (e) { console.error(e); saida.textContent = 'Não consegui montar o arquivo: ' + e.message + '. Tente baixar uma aula por vez.'; }
     botao.disabled = false;
   };
-  let tudo = 0;
+  let tudo = 0, total = 0, compartilhaArquivos = false;
+  const textoZap = 'Gravações da narração - A Liga (CVDentus)';
   for (const p of (parteUnica ? [parteUnica] : PARTES)) {
-    let n = 0, bytes = 0;
-    for (const b of p.blocos) { const t = await takeDoBloco(chaveBloco(p, b)); if (t) { n++; bytes += t.video ? t.video.size : 0; } }
+    let n = 0, bytes = 0, ib = 0; const arqs = [];
+    for (const b of p.blocos) {
+      ib++; total++; const t = await takeDoBloco(chaveBloco(p, b));
+      if (!t) continue;
+      n++;
+      if (t.video) { bytes += t.video.size; arqs.push(new File([t.video], `${p.arquivo}_${String(ib).padStart(2, '0')}_${slug(b.titulo)}.${extDe(t.mime)}`, { type: (t.mime || 'video/mp4').split(';')[0] })); }
+    }
     tudo += n;
-    const bt = h('button', { class: 'btn sec', disabled: n ? null : '' }, 'Baixar'); bt.onclick = () => baixarEscopo([p], p.arquivo, bt);
-    lista.append(h('div', { class: 'item-pac' }, h('span', { class: 't' }, `${rotuloParte(p)} · ${p.titulo}`, h('small', {}, `${n} de ${p.blocos.length} trechos${bytes ? ' · ' + mb(bytes) : ''}`)), bt));
+    // os arquivos já estão prontos aqui, para o toque no botão abrir direto a lista de aplicativos (o navegador exige isso)
+    const zapOk = !!(navigator.canShare && arqs.length && navigator.canShare({ files: arqs }));
+    compartilhaArquivos = compartilhaArquivos || zapOk;
+    const bt = h('button', { class: 'btn ' + (zapOk ? 'zap' : 'sec'), disabled: arqs.length ? null : '' }, zapOk ? 'WhatsApp' : 'Baixar MP4');
+    bt.onclick = zapOk ? () => navigator.share({ files: arqs, title: textoZap, text: `${textoZap} · ${rotuloParte(p)}` }).catch(() => {})
+      : () => arqs.forEach((f, k) => setTimeout(() => baixar(f, f.name), k * 700));
+    lista.append(h('div', { class: 'item-pac' }, h('span', { class: 't' }, `${rotuloParte(p)} · ${p.titulo}`, h('small', {}, `${n} de ${p.blocos.length} trechos${bytes ? ' · MP4 ' + mb(bytes) : ''}`)), bt));
   }
-  const bTudo = h('button', { class: 'btn', disabled: tudo ? null : '' }, 'Baixar tudo em um arquivo'); bTudo.onclick = () => baixarEscopo(parteUnica ? [parteUnica] : PARTES, parteUnica ? parteUnica.arquivo : 'aulas', bTudo);
+  const completo = total > 0 && tudo === total;
+  const bTudo = h('button', { class: 'btn', disabled: completo ? null : '' }, 'Baixar tudo em ZIP'); bTudo.onclick = () => baixarEscopo(parteUnica ? [parteUnica] : PARTES, parteUnica ? parteUnica.arquivo : 'aulas', bTudo);
+  saida.textContent = completo ? 'Tudo gravado! O ZIP traz os MP4 e MP3 de todos os trechos, com texto e tempos.'
+    : `Cada aula vai em MP4, que abre direto no WhatsApp. O ZIP com tudo libera quando todos os trechos estiverem gravados (${tudo} de ${total}).`;
+  if (!compartilhaArquivos && tudo) compartilhar.append(
+    h('button', { class: 'btn zap', onclick: () => window.open('https://wa.me/?text=' + encodeURIComponent(textoZap), '_blank', 'noopener') }, 'Abrir WhatsApp'),
+    h('small', { class: 'dica' }, 'Este navegador não envia arquivos direto: baixe os MP4 e anexe na conversa (clipe, Vídeo).'));
   d.append(h('h2', {}, 'Enviar gravações'), lista, saida, compartilhar, h('div', { class: 'acoes' }, bTudo, h('button', { class: 'btn sec', onclick: () => d.close() }, 'Fechar')));
   d.showModal();
 }
